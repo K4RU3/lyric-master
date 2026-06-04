@@ -29,9 +29,41 @@
                     <textarea id="main-editor" placeholder="歌詞を入力してください... (例: あ~い~う^え^お)"></textarea>
                 </div>
                 <div class="settings" id="tech-settings">
-                    <h3>テクニック設定</h3>
+                    <div class="settings-header">
+                        <h3>テクニック設定</h3>
+                        <button id="add-tech-btn" class="btn-small">+ 追加</button>
+                    </div>
                     <div id="tech-list">
                         <!-- 動的に生成 -->
+                    </div>
+                </div>
+
+                <!-- テクニック追加用モーダル/フォーム（簡易） -->
+                <div id="tech-modal" class="modal" style="display:none;">
+                    <div class="modal-content">
+                        <h4>テクニックの追加</h4>
+                        <div class="form-group">
+                            <label>名前 (例: ブレス):</label>
+                            <input type="text" id="new-tech-label" placeholder="名前">
+                        </div>
+                        <div class="form-group">
+                            <label>使用記号 (1文字):</label>
+                            <input type="text" id="new-tech-char" maxlength="1" placeholder="!">
+                        </div>
+                        <div class="form-group">
+                            <label>タイプ:</label>
+                            <select id="new-tech-type">
+                                <option value="range">範囲指定 (!...!)</option>
+                                <option value="single">単一文字 (!)</option>
+                            </select>
+                        </div>
+                        <div id="new-tech-extra-fields">
+                            <!-- typeに応じて動的に変更 -->
+                        </div>
+                        <div class="modal-actions">
+                            <button id="save-tech-btn">保存</button>
+                            <button id="cancel-tech-btn">キャンセル</button>
+                        </div>
                     </div>
                 </div>
             </section>
