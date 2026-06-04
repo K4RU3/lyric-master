@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lyric Technique Visualizer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Lyric Technique Visualizer</h1>
+            <div class="song-meta">
+                <input type="text" id="song-title" placeholder="曲名を入力...">
+            </div>
+            <div class="controls">
+                <button id="export-btn">エクスポート (.txt)</button>
+                <label class="btn-label">
+                    インポート (.txt)
+                    <input type="file" id="import-input" accept=".txt" hidden>
+                </label>
+            </div>
+        </header>
+
+        <main>
+            <section class="editor-section">
+                <h2>エディタ</h2>
+                <div class="input-container">
+                    <textarea id="main-editor" placeholder="歌詞を入力してください... (例: あ~い~う^え^お)"></textarea>
+                </div>
+                <div class="settings" id="tech-settings">
+                    <h3>テクニック設定</h3>
+                    <div id="tech-list">
+                        <!-- 動的に生成 -->
+                    </div>
+                </div>
+            </section>
+
+            <section class="preview-section">
+                <h2>プレビュー</h2>
+                <div id="preview-area" class="preview-area">
+                    <!-- 動的に生成 -->
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <div class="legend">
+                <h3>ショートカット記法</h3>
+                <ul>
+                    <li><code>~...~</code> : ビブラート</li>
+                    <li><code>-...-</code> : ウィスパー</li>
+                    <li><code>^...^</code> : 裏声</li>
+                    <li><code>:...:</code> : エッジ</li>
+                    <li><code>'</code> : しゃくり (直前の文字)</li>
+                    <li><code>"</code> : フォール (直前の文字)</li>
+                </ul>
+            </div>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
