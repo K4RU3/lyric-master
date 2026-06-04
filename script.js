@@ -8,8 +8,8 @@ let techniques = {
     whisper: { char: '-', label: 'ウィスパー', type: 'range', color: '#f3e5f5' },
     falsetto: { char: '^', label: '裏声', type: 'range', color: '#fff3e0' },
     edge: { char: ':', label: 'エッジボイス', type: 'range', color: '#ffebee' },
-    shakuri: { char: "'", label: 'しゃくり', type: 'single', symbol: '⤴' },
-    fall: { char: '"', label: 'フォール', type: 'single', symbol: '⤵' }
+    shakuri: { char: "'", label: 'しゃくり', type: 'single', symbol: '⤴', position: 'above' },
+    fall: { char: '"', label: 'フォール', type: 'single', symbol: '⤵', position: 'above' }
 };
 
 const editor = document.getElementById('main-editor');
@@ -26,6 +26,8 @@ const cancelTechBtn = document.getElementById('cancel-tech-btn');
 const saveTechBtn = document.getElementById('save-tech-btn');
 const newTechType = document.getElementById('new-tech-type');
 const newTechExtra = document.getElementById('new-tech-extra-fields');
+const newTechPosField = document.getElementById('new-tech-position-field');
+const newTechPos = document.getElementById('new-tech-position');
 
 // 初期化
 function init() {
@@ -49,7 +51,12 @@ function updateDynamicStyles() {
             css += `.tech-${key} { background-color: ${tech.color}; border-radius: 2px; padding: 2px 0; }\n`;
         } else if (tech.type === 'single') {
             css += `.tech-${key} { position: relative; display: inline-block; }\n`;
-            css += `.tech-${key}::before { content: "${tech.symbol}"; position: absolute; top: -1.2em; left: 50%; transform: translateX(-50%); font-size: 0.7em; color: #666; }\n`;
+            if (tech.position === 'above') {
+                css += `.tech-${key}::before { content: "${tech.symbol}"; position: absolute; top: -1.2em; left: 50%; transform: translateX(-50%); font-size: 0.7em; color: #666; }\n`;
+            } else {
+                // 文字の横（間）に表示
+                css += `.tech-${key}::after { content: "${tech.symbol}"; font-size: 0.8em; color: #888; margin-left: 2px; vertical-align: middle; }\n`;
+            }
         }
     });
     styleTag.textContent = css;
@@ -122,6 +129,7 @@ function setupEventListeners() {
 function updateNewTechFields() {
     const type = newTechType.value;
     if (type === 'range') {
+        newTechPosField.style.display = 'none';
         newTechExtra.innerHTML = `
             <div class="form-group">
                 <label>デフォルト色:</label>
@@ -129,9 +137,10 @@ function updateNewTechFields() {
             </div>
         `;
     } else {
+        newTechPosField.style.display = 'block';
         newTechExtra.innerHTML = `
             <div class="form-group">
-                <label>表示記号 (例: ⤴):</label>
+                <label>表示記号 (例: ⤴, v, (b)):</label>
                 <input type="text" id="new-tech-symbol" placeholder="記号">
             </div>
         `;
@@ -152,6 +161,7 @@ function saveNewTechnique() {
         newTech.color = document.getElementById('new-tech-color').value;
     } else {
         newTech.symbol = document.getElementById('new-tech-symbol').value;
+        newTech.position = newTechPos.value;
     }
 
     techniques[key] = newTech;
@@ -176,6 +186,8 @@ function updatePreview() {
     const processedLines = lines.map(line => {
         let processedLine = line;
 
+        // 記号のパース（内部表現への一時変換）
+        // techniquesの順序で置換すると干渉する可能性があるため、一旦キーベースのタグにする
         Object.entries(techniques).forEach(([key, tech]) => {
             const escapedChar = escapeRegExp(tech.char);
             if (tech.type === 'range') {
@@ -213,7 +225,7 @@ function exportToFile() {
     
     const metadata = {
         title: title,
-        techniques: techniques, // テクニック定義そのものを保存
+        techniques: techniques,
         exportedAt: new Date().toISOString()
     };
 
@@ -250,7 +262,6 @@ function importFromFile(e) {
 
                     if (metadata.title) songTitleInput.value = metadata.title;
                     
-                    // テクニック定義を丸ごと復元
                     if (metadata.techniques) {
                         techniques = metadata.techniques;
                         updateDynamicStyles();
