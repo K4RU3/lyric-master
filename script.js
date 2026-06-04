@@ -183,35 +183,85 @@ function updatePreview() {
     let content = editor.value;
     const lines = content.split('\n');
     
-    const processedLines = lines.map(line => {
-        let processedLine = line;
+    const htmlLines = lines.map(line => {
+        if (!line.trim() && line.length === 0) return '<br>';
 
-        // 記号のパース（内部表現への一時変換）
-        // techniquesの順序で置換すると干渉する可能性があるため、一旦キーベースのタグにする
+        // 1. 各文字のスタイルを特定する
+        const charData = [];
+        let activeRanges = new Set();
+        
+        // テクニックを記号で検索しやすくするマップ
+        const charToTech = {};
         Object.entries(techniques).forEach(([key, tech]) => {
-            const escapedChar = escapeRegExp(tech.char);
-            if (tech.type === 'range') {
-                const regex = new RegExp(`${escapedChar}([^${escapedChar}]+)${escapedChar}`, 'g');
-                processedLine = processedLine.replace(regex, `|${key}:$1|`);
-            } else if (tech.type === 'single') {
-                const regex = new RegExp(`(.)[${escapedChar}]`, 'g');
-                processedLine = processedLine.replace(regex, `|${key}:$1|`);
-            }
+            if (!charToTech[tech.char]) charToTech[tech.char] = [];
+            charToTech[tech.char].push({ key, ...tech });
         });
 
-        return processedLine;
-    });
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            const techs = charToTech[char];
 
-    const htmlLines = processedLines.map(line => {
-        let html = line;
-        const internalRegex = /\|([^:]+):([^|]+)\|/g;
-        html = html.replace(internalRegex, (match, key, text) => {
-            const tech = techniques[key];
-            if (tech) {
-                return `<span class="tech-${key}">${text}</span>`;
+            if (techs) {
+                // マーカー文字の場合
+                let isMarker = false;
+                techs.forEach(tech => {
+                    if (tech.type === 'range') {
+                        if (activeRanges.has(tech.key)) {
+                            activeRanges.delete(tech.key);
+                        } else {
+                            activeRanges.add(tech.key);
+                        }
+                        isMarker = true;
+                    } else if (tech.type === 'single') {
+                        // 直前の文字にテクニックを適用
+                        if (charData.length > 0) {
+                            charData[charData.length - 1].styles.add(tech.key);
+                        }
+                        isMarker = true;
+                    }
+                });
+                
+                if (isMarker) continue; // マーカー自体は出力しない
             }
-            return text;
+
+            // 通常の文字
+            charData.push({
+                char: char,
+                styles: new Set(activeRanges)
+            });
+        }
+
+        // 2. 連続する同じスタイルの文字をグループ化してHTML化
+        let html = '';
+        let currentGroup = null;
+
+        charData.forEach((data, index) => {
+            const stylesArray = Array.from(data.styles).sort();
+            const stylesKey = stylesArray.join(',');
+
+            if (!currentGroup || currentGroup.stylesKey !== stylesKey) {
+                if (currentGroup) {
+                    html += `</span>`;
+                }
+                const classes = stylesArray.map(s => `tech-${s}`).join(' ');
+                html += `<span class="${classes}">`;
+                currentGroup = { stylesKey };
+            }
+            
+            // HTMLエスケープ
+            const escapedChar = data.char
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+            html += escapedChar;
         });
+
+        if (currentGroup) {
+            html += `</span>`;
+        }
+
         return html || ' ';
     });
 
